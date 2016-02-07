@@ -108,7 +108,7 @@ getAuthToken()
 							return noteStore
 								.then(runStoreMethod('updateNote', note))
 								.then((result) => updates.set(guid, Date.now()) && result)
-								.then(notify(() => `"${chalk.cyan(title)}" successfully updated! (${++count}/${totalCount})`));
+								.then(notify(() => `(${++count}/${totalCount}) "${chalk.cyan(title)}" successfully updated!`));
 						}));
 					});
 			})
