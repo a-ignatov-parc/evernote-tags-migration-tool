@@ -28,6 +28,7 @@
     "chalk": "^1.1.1",
     "evernote": "^1.25.82",
     "lodash": "^4.2.1",
+    "libxslt-prebuilt": "InnovaCo/libxslt-prebuilt#v0.5.4-module",
     "merge": "^1.2.0",
     "mkdirp": "^0.5.1",
     "prompt": "^0.2.14",
