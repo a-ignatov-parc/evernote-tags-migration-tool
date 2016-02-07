@@ -11,7 +11,6 @@ import Storage from './lib/storage';
 import getAuthTokenFromEvernote from './lib/geeknote-basic-auth';
 
 const storage = new Storage();
-
 const ctx = {};
 
 const processParams = process.argv
