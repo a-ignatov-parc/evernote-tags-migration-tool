@@ -1,9 +1,11 @@
 import chalk from 'chalk';
 import merge from 'merge';
+import moment from 'moment';
 import Promise from 'bluebird';
 import {Evernote} from 'evernote';
 import {libxmljs} from 'libxslt-prebuilt';
 
+// Constructors
 const {
 	Note,
 	Thrift,
@@ -13,7 +15,9 @@ const {
 	NotesMetadataResultSpec,
 } = Evernote;
 
+// Constants
 const {
+	EDAMErrorCode,
 	EDAM_USER_NOTES_MAX,
 } = Evernote;
 
@@ -177,7 +181,14 @@ function log(title = '') {
 }
 
 function handleError(title = '') {
-	return (error) => console.error(title, error);
+	return (error) => {
+		if (error.errorCode === EDAMErrorCode.RATE_LIMIT_REACHED) {
+			let time = moment.duration(error.rateLimitDuration, 'seconds').humanize();
+			console.log(title, `Can't proceed! Rate limits will expire in ${time}`);
+		} else {
+			console.error(title, error);
+		}
+	}
 }
 
 function getUserStore() {
