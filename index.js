@@ -5,6 +5,12 @@ const {
 	Thrift,
 	UserStoreClient,
 	NoteStoreClient,
+	NoteFilter,
+	NotesMetadataResultSpec,
+} = Evernote;
+
+const {
+	EDAM_USER_NOTES_MAX,
 } = Evernote;
 
 import Storage from './lib/storage';
@@ -26,26 +32,26 @@ const USER_STORE_URI = "https://www.evernote.com/edam/user"
 getAuthToken()
 	.then(saveTokenToCtx)
 	.then(() => {
-		// let userStore = getUserStore();
 		let noteStore = getNoteStore();
-
-		// userStore
-		// 	.then(runStoreMethod('getUser'))
-		// 	.then((user) => {
-		// 		console.log(111, user);
-		// 	});
+		let {'notebook-name': notebookName = ''} = processParams;
 
 		noteStore
 			.then(runStoreMethod('listNotebooks'))
 			.then((notebooks) => {
-				console.log(1, notebooks);
-				return Promise.all(notebooks.map(({guid}) => {
-					return noteStore.then(runStoreMethod('getNotebook', guid));
-				}));
+				let [{guid}] = notebooks.filter(({name}) => name === notebookName);
+				let filter = new NoteFilter({notebookGuid: guid});
+				let spec = new NotesMetadataResultSpec({
+					includeTitle: true,
+					includeCreated: true,
+					includeUpdated: true,
+					includeTagGuids: true,
+					includeAttributes: true,
+				});
+
+				return noteStore.then(runStoreMethod('findNotesMetadata', filter, 0, EDAM_USER_NOTES_MAX, spec));
 			})
-			.then((notebooks) => {
-				console.log(2, notebooks);
-			})
+			.then(log())
+			.catch(handleError())
 	});
 
 function getAuthToken() {
@@ -77,6 +83,14 @@ function runStoreMethod(name, ...args) {
 	return function(store) {
 		return store[name](...args);
 	}
+}
+
+function log(title = '') {
+	return (result) => console.log(title, result);
+}
+
+function handleError(title = '') {
+	return (error) => console.error(title, error);
 }
 
 function getUserStore() {
