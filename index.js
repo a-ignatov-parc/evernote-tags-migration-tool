@@ -90,7 +90,7 @@ getAuthToken()
 					let {content} = note;
 					let doc = libxmljs.parseXmlString(content);
 					let tagsString = doc.find(tagsXpath);
-					let tagsList = tagsString.trim().split(/\s*,\s*/);
+					let tagsList = tagsString.trim().split(/\s*,\s*/).filter(Boolean);
 					return merge({}, note, {tagsList});
 				});
 			})
@@ -101,19 +101,27 @@ getAuthToken()
 						let count = 0;
 						let totalCount = notes.length;
 
-						return Promise.all(notes.map(({guid, title, tagsList, tagGuids, created, updated}) => {
-							let tagNames = [].concat(tagsList, findTagsByGuidInTagsList(tagsCollection, tagGuids));
+						return Promise.all(notes
+							.map(({guid, title, tagsList, tagGuids, created, updated}) => {
+								let tagNames = [].concat(tagsList, findTagsByGuidInTagsList(tagsCollection, tagGuids));
 
-							// Creating note's changes with preserving created and updated dates.
-							let note = new Note({guid, title, tagNames, created, updated});
+								if (!tagNames.length) {
+									console.log(`Skipping "${chalk.cyan(title)}" it has no tags`);
+									return;
+								}
 
-							console.log(`Preparing to update "${chalk.cyan(title)}" with tags: ${chalk.gray(JSON.stringify(tagNames))}`);
+								// Creating note's changes with preserving created and updated dates.
+								let note = new Note({guid, title, tagNames, created, updated});
 
-							return noteStore
-								.then(runStoreMethod('updateNote', note))
-								.then((result) => updates.set(guid, Date.now()) && result)
-								.then(notify(() => `(${++count}/${totalCount}) "${chalk.cyan(title)}" successfully updated!`));
-						}));
+								console.log(`Preparing to update "${chalk.cyan(title)}" with tags: ${chalk.gray(JSON.stringify(tagNames))}`);
+
+								return noteStore
+									.then(runStoreMethod('updateNote', note))
+									.then((result) => updates.set(guid, Date.now()) && result)
+									.then(notify(() => `(${++count}/${totalCount}) "${chalk.cyan(title)}" successfully updated!`));
+							})
+							.filter(Boolean)
+						);
 					});
 			})
 			.then(notify('All done!'))
